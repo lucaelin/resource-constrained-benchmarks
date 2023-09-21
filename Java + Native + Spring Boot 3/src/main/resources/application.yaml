@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/apples
+    username: dbuser
+    password: dbpass
+    hikari:
+      maximum-pool-size: 1000 # Maximum number of connections in the pool
+      minimum-idle: 5 # Minimum number of idle connections maintained in the pool
+      idle-timeout: 10000 # Maximum amount of time (in milliseconds) that a connection is allowed to sit idle in the pool
+      pool-name: MyHikariPool # Name of the connection pool
+      max-lifetime: 1800000 # Maximum lifetime (in milliseconds) of a connection in the pool
+      connection-timeout: 30000 # Maximum number of milliseconds a client will wait for a connection from the pool
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation: DEBUG
