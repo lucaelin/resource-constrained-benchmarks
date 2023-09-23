@@ -84,21 +84,24 @@ func doRequests(wg *sync.WaitGroup, ch chan int, quit <-chan struct{}) {
 
 			_, err := makePostRequest(client, fmt.Sprintf("%s/%s/command", baseURL, uuid), &Payload{Data: "string1"})
 			if err != nil {
-				fmt.Println("Error making first POST request:", err)
+				//fmt.Println("Error making first POST request:", err)
+				time.Sleep(10 * time.Millisecond)
 				continue
 			}
 			count++;
 
 			_, err = makePostRequest(client, fmt.Sprintf("%s/%s/command", baseURL, uuid), &Payload{Data: "string2"})
 			if err != nil {
-				fmt.Println("Error making second POST request:", err)
+				//fmt.Println("Error making second POST request:", err)
+				time.Sleep(10 * time.Millisecond)
 				continue
 			}
 			count++;
 
 			_, err = makeGetRequest(client, fmt.Sprintf("%s/%s/query", baseURL, uuid))
 			if err != nil {
-				fmt.Println("Error making GET request:", err)
+				//fmt.Println("Error making GET request:", err)
+				time.Sleep(10 * time.Millisecond)
 				continue
 			}
 			count++;
