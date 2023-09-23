@@ -16,5 +16,5 @@ spring:
       ddl-auto: update
 logging:
   level:
-    org.springframework.web: DEBUG
-    org.springframework.web.servlet.mvc.method.annotation: DEBUG
+    # org.springframework.web: DEBUG
+    # org.springframework.web.servlet.mvc.method.annotation: DEBUG
