@@ -16,7 +16,7 @@ fun Application.configureDatabases() {
         driverClassName = "org.postgresql.Driver"
         username = "dbuser"
         password = "dbpass"
-        maximumPoolSize = 1000 // Set this to your desired pool size
+        maximumPoolSize = 100 // Set this to your desired pool size
         validate()
     }
 

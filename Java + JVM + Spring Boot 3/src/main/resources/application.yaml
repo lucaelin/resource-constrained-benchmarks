@@ -4,7 +4,7 @@ spring:
     username: dbuser
     password: dbpass
     hikari:
-      maximum-pool-size: 1000 # Maximum number of connections in the pool
+      maximum-pool-size: 100 # Maximum number of connections in the pool
       minimum-idle: 5 # Minimum number of idle connections maintained in the pool
       idle-timeout: 10000 # Maximum amount of time (in milliseconds) that a connection is allowed to sit idle in the pool
       pool-name: MyHikariPool # Name of the connection pool

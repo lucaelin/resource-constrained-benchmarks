@@ -49,6 +49,8 @@ do
   timeout 1m ../bench/bench -run=$i -connections=1 -duration=30 >> "$output_file"
   echo "bench 10"
   timeout 1m ../bench/bench -run=$i -connections=10 -duration=30 >> "$output_file"
+  echo "bench 50"
+  timeout 1m ../bench/bench -run=$i -connections=50 -duration=30 >> "$output_file"
   echo "bench 100"
   timeout 1m ../bench/bench -run=$i -connections=100 -duration=30 >> "$output_file"
 
