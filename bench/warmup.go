@@ -38,6 +38,7 @@ func main() {
 		if err != nil {
 			// fmt.Println("Error making the request:", err)
 			initalElapsed = time.Since(initialStart)
+			time.Sleep(1 * time.Millisecond)
 			continue
 		}
 		ioutil.ReadAll(resp.Body)

@@ -35,11 +35,12 @@ func main() {
 	flag.Parse()
 	var wg sync.WaitGroup
 	ch := make(chan int, numGoroutines)
+	failedCh := make(chan int, numGoroutines) // Create a new channel for failed requests
 	quit := make(chan struct{})
 
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
-		go doRequests(&wg, ch, quit)
+		go doRequests(&wg, ch, failedCh, quit) // Pass the failedCh to the doRequests function
 	}
 
 	timer := time.NewTimer(time.Duration(durationInSeconds) * time.Second)
@@ -48,18 +49,23 @@ func main() {
 	close(quit)
 	wg.Wait()
 	close(ch)
+	close(failedCh) // Close the failedCh channel
 
-	var total int
+	var total, totalFailed int
 	for count := range ch {
 		total += count
 	}
+	for failed := range failedCh { // Iterate over the failedCh to calculate the total number of failed requests
+		totalFailed += failed
+	}
 
 	throughput := float64(total) / float64(durationInSeconds)
-	//fmt.Printf("total requests - %s - 0 - %v\n", run, total)
+	throughputFailed := float64(totalFailed) / float64(durationInSeconds)
 	fmt.Printf("throughput - %s - %v - %v req/sec\n", run, numGoroutines, throughput)
+	fmt.Printf("failrate - %s - %v - %v fail/sec\n", run, numGoroutines, throughputFailed) // Print the total number of failed requests
 }
 
-func doRequests(wg *sync.WaitGroup, ch chan int, quit <-chan struct{}) {
+func doRequests(wg *sync.WaitGroup, ch chan int, failedCh chan int, quit <-chan struct{}) {
 	defer wg.Done()
 
 	client := &http.Client{
@@ -72,10 +78,12 @@ func doRequests(wg *sync.WaitGroup, ch chan int, quit <-chan struct{}) {
 	}
 
 	count := 0
+	countFailed := 0
 	for {
 		select {
 		case <-quit:
 			ch <- count
+			failedCh <- countFailed
 			return
 		default:
 			uuid := uuid.New().String()
@@ -85,6 +93,7 @@ func doRequests(wg *sync.WaitGroup, ch chan int, quit <-chan struct{}) {
 			_, err := makePostRequest(client, fmt.Sprintf("%s/%s/command", baseURL, uuid), &Payload{Data: "string1"})
 			if err != nil {
 				//fmt.Println("Error making first POST request:", err)
+				countFailed++
 				time.Sleep(10 * time.Millisecond)
 				continue
 			}
@@ -93,6 +102,7 @@ func doRequests(wg *sync.WaitGroup, ch chan int, quit <-chan struct{}) {
 			_, err = makePostRequest(client, fmt.Sprintf("%s/%s/command", baseURL, uuid), &Payload{Data: "string2"})
 			if err != nil {
 				//fmt.Println("Error making second POST request:", err)
+				countFailed++
 				time.Sleep(10 * time.Millisecond)
 				continue
 			}
@@ -101,6 +111,7 @@ func doRequests(wg *sync.WaitGroup, ch chan int, quit <-chan struct{}) {
 			_, err = makeGetRequest(client, fmt.Sprintf("%s/%s/query", baseURL, uuid))
 			if err != nil {
 				//fmt.Println("Error making GET request:", err)
+				countFailed++
 				time.Sleep(10 * time.Millisecond)
 				continue
 			}
