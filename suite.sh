@@ -5,7 +5,7 @@ TECH_STACK_VALUES=(
 #    'Go + Native + Gin'
 #    'Java + JVM + Quarkus'
 #    'Java + JVM + Spring Boot 3'
-    'Java + Native + Spring Boot 3'
+#    'Java + Native + Spring Boot 3'
 #    'Kotlin + JVM + Ktor'
 #    'Python + CPython + Flask'
     'TypeScript + Node.js + Express'
@@ -33,7 +33,7 @@ do
     do
         for MEM_LIMIT in "${APP_MEM_LIMIT_VALUES[@]}"; 
         do
-            APP_CPU_LIMIT=$CPU_LIMIT APP_MEM_LIMIT=$MEM_LIMIT ./bench.sh "$TECH_STACK";
+            APP_CPU_LIMIT=$CPU_LIMIT APP_MEM_LIMIT=$MEM_LIMIT timeout 30m ./bench.sh "$TECH_STACK";
             python3 ./plot.py "${CPU_LIMIT} Core - ${MEM_LIMIT}B";
             python3 ./plot.py "$TECH_STACK";
         done

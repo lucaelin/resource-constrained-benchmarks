@@ -7,7 +7,7 @@ def process_file(filepath):
     compose_up_df = pd.DataFrame(columns=['run', 'time'])
     compose_stop_df = pd.DataFrame(columns=['run', 'time'])
     service_up_df = pd.DataFrame(columns=['run', 'time'])
-    curl_request_df = pd.DataFrame(columns=['request', 'run', 'time'])
+    warmup_df = pd.DataFrame(columns=['request', 'run', 'time'])
     memory_df = pd.DataFrame(columns=['request', 'run', 'mem'])
     load_df = pd.DataFrame(columns=['run', 'freq'])
 
@@ -30,21 +30,22 @@ def process_file(filepath):
                 compose_stop_df = compose_stop_df.append({'run': run, 'time': time}, ignore_index=True)
             elif 'service up' in operation:
                 service_up_df = service_up_df.append({'run': run, 'time': time}, ignore_index=True)
-            elif 'curl request' in operation:
-                curl_request_df = curl_request_df.append({'request': request, 'run': run, 'time': time}, ignore_index=True)
+            elif 'warmup request' in operation:
+                warmup_df = warmup_df.append({'run': run, 'request': request, 'time': time}, ignore_index=True)
             elif 'memory' in operation:
                 match = re.search(r"app-1\s*(\d+\.\d+)MiB\s*/", value)
                 if match:
-                    memory_df = memory_df.append({'request': request, 'run': run, 'mem': float(match.group(1))}, ignore_index=True)
-            elif 'load requests' in operation:
-                match = re.search(r"Requests/sec:\s*(\d+\.\d+)", value)
+                    memory_df = memory_df.append({'run': run, 'request': request, 'mem': float(match.group(1))}, ignore_index=True)
+            elif 'throughput' in operation:
+                match = re.search(r"(\d+\.\d+)\s*req/sec", value)
+                connections = request
                 if match:
-                    load_df = load_df.append({'run': run, 'freq': float(match.group(1))}, ignore_index=True)
+                    load_df = load_df.append({'run': run, 'connections': connections, 'freq': float(match.group(1))}, ignore_index=True)
 
     # Calculate mean and standard deviation for each request
-    curl_summary_df = curl_request_df.groupby('request')['time'].agg(['mean', 'std'])
+    warmup_summary_df = warmup_df.groupby('request')['time'].agg(['mean', 'std'])
 
-    return compose_up_df, compose_stop_df, service_up_df, curl_summary_df, memory_df, load_df
+    return compose_up_df, compose_stop_df, service_up_df, warmup_summary_df, memory_df, load_df
 
 def plot_data(dataframes):
     import matplotlib.pyplot as plt
@@ -75,21 +76,22 @@ def plot_data(dataframes):
         autolabel(rects1, ax[0])
 
         # Plot first request time
-        rects2 = ax[1].bar(str(i), dfs['curl_summary'].loc[1, 'mean'], yerr=dfs['curl_summary'].loc[1, 'std'], color=color, label=filename)
+        rects2 = ax[1].bar(str(i), dfs['warmup_summary'].loc[1, 'mean'], yerr=dfs['warmup_summary'].loc[1, 'std'], color=color, label=filename)
         autolabel(rects2, ax[1])
 
-        # Plot curl request times with full range
-        ax[2].plot(dfs['curl_summary'].index, dfs['curl_summary']['mean'], color=color, label=filename)
-        ax[2].errorbar(dfs['curl_summary'].index, dfs['curl_summary']['mean'], yerr=dfs['curl_summary']['std'], color=color, alpha=0.4, fmt='none')
+        # Plot warmup request times with full range
+        ax[2].plot(dfs['warmup_summary'].index, dfs['warmup_summary']['mean'], color=color, label=filename)
+        ax[2].errorbar(dfs['warmup_summary'].index, dfs['warmup_summary']['mean'], yerr=dfs['warmup_summary']['std'], color=color, alpha=0.4, fmt='none')
         ax[2].set_xlim(0.5, 5.5)
 
-        # Plot curl request times with restricted range
-        ax[3].plot(dfs['curl_summary'].index, dfs['curl_summary']['mean'], color=color, label=filename)
-        ax[3].errorbar(dfs['curl_summary'].index, dfs['curl_summary']['mean'], yerr=dfs['curl_summary']['std'], color=color, alpha=0.4, fmt='none')
+        # Plot warmup request times with restricted range
+        ax[3].plot(dfs['warmup_summary'].index, dfs['warmup_summary']['mean'], color=color, label=filename)
+        ax[3].errorbar(dfs['warmup_summary'].index, dfs['warmup_summary']['mean'], yerr=dfs['warmup_summary']['std'], color=color, alpha=0.4, fmt='none')
         ax[3].set_ylim(0, 0.4)
 
         # Plot throughput
-        rects3 = ax[4].bar(str(i), dfs['throughput']['freq'].mean(), yerr=dfs['throughput']['freq'].std(), color=color, label=filename)
+        filtered_df = dfs['throughput'][dfs['throughput']['connections'] == 10]
+        rects3 = ax[4].bar(str(i), filtered_df['freq'].mean(), yerr=filtered_df['freq'].std(), color=color, label=filename)
         autolabel(rects3, ax[4])
 
         # Plot Memory
@@ -104,19 +106,19 @@ def plot_data(dataframes):
     #ax[0].legend(loc='upper right')
     ax[0].legend(loc='best')
 
-    ax[1].set_title('Curl Request Times - First')
+    ax[1].set_title('Warmup Request Times - First')
     ax[1].set_xlabel('Type')
     ax[1].set_ylabel('Time (seconds)')
     #ax[1].legend(loc='upper right')
     ax[1].legend(loc='best')
 
-    ax[2].set_title('Curl Request Times - Full Range')
+    ax[2].set_title('Warmup Request Times - Full Range')
     ax[2].set_xlabel('Request Number')
     ax[2].set_ylabel('Time (seconds)')
     #ax[2].legend(loc='upper right')
     ax[2].legend(loc='best')
 
-    ax[3].set_title('Curl Request Times - Restricted Range')
+    ax[3].set_title('Warmup Request Times - Restricted Range')
     ax[3].set_xlabel('Request Number')
     ax[3].set_ylabel('Time (seconds)')
     #ax[3].legend(loc='upper right')
@@ -158,13 +160,14 @@ def load_file_into_dataframes(pattern):
     # Loop through the matched files
     for file in glob.glob(pattern, recursive=True):
         if 'requirements.txt' in file: continue
+        if 'old/' in file: continue
         # Process file and store dataframes in dictionary
-        compose_up_df, compose_stop_df, service_up_df, curl_summary_df, memory_df, load_df = process_file(file)
+        compose_up_df, compose_stop_df, service_up_df, warmup_summary_df, memory_df, load_df = process_file(file)
         dataframes[file.replace('.txt', '')] = {
             'compose_up': compose_up_df,
             'compose_stop': compose_stop_df,
             'service_up': service_up_df,
-            'curl_summary': curl_summary_df,
+            'warmup_summary': warmup_summary_df,
             'memory': memory_df,
             'throughput': load_df,
         }

@@ -17,8 +17,6 @@ fun Application.configureDatabases() {
         username = "dbuser"
         password = "dbpass"
         maximumPoolSize = 1000 // Set this to your desired pool size
-        isAutoCommit = false
-        transactionIsolation = "TRANSACTION_REPEATABLE_READ"
         validate()
     }
 

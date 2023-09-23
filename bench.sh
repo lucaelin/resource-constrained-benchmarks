@@ -39,49 +39,18 @@ do
   start_time=$(echo "$end - $start" | bc)
   echo "compose up app - $i - 0 - $start_time seconds" >> "$output_file"
 
-  # Measure and record the time for curl requests
-  j=0
-  compose_up_time=$(date +%s.%N)
-  service_not_up_time=$(date +%s.%N)
-
-  while [ $j -lt 100 ]
-  do
-    uuid=$(uuid)
-    start=$(date +%s.%N)
-    response=$(curl -s -o /dev/null --connect-timeout 0.5 -w "%{http_code}" http://localhost:8080/$uuid/query)
-    end=$(date +%s.%N)
-    request_time=$(echo "$end - $start" | bc)
-
-    # If the request was successful (HTTP 200) and it's the first successful response, save the time
-    if [ "$response" != "200" ]; then
-      service_not_up_time=$(date +%s.%N)
-      startup_time=$(echo "$service_not_up_time - $compose_up_time" | bc)
-      sleep 0.1
-    fi
-
-    # If the request was successful (HTTP 200), increment the counter
-    if [ "$response" == "200" ]; then
-      if [ $j -eq 0 ]; then
-        echo "service up - $i - 0 - $startup_time seconds" >> "$output_file"
-        memory=$(docker stats --no-stream --no-trunc --format '{{.Name}} {{.MemUsage}}' | grep app-)
-        echo "memory - $i - 0 - $memory" >> "$output_file"
-      fi
-      echo "curl request - $i - $(($j+1)) - $request_time seconds" >> "$output_file"
-      j=$((j+1))
-    fi
-
-  done
+  echo "warmup"
+  timeout 5m ../bench/warmup -run $i >> "$output_file"
 
   memory=$(docker stats --no-stream --no-trunc --format '{{.Name}} {{.MemUsage}}' | grep app-)
   echo "memory - $i - 1 - $memory" >> "$output_file"
 
-  uuid=$(uuid)
-  load_test=$(../wrk -t6 -c100 -d60s -s ../wrk-script.lua http://127.0.0.1:8080/)
-  load_reqs=$(echo $load_test | grep Requests/sec)
-  load_latency=$(echo $load_test | grep Latency)
-  
-  echo "load requests - $i - 1 - $load_reqs" >> "$output_file"
-  echo "load latency - $i - 1 - $load_latency" >> "$output_file"
+  echo "bench 1"
+  timeout 1m ../bench/bench -run=$i -connections=1 -duration=30 >> "$output_file"
+  echo "bench 10"
+  timeout 1m ../bench/bench -run=$i -connections=10 -duration=30 >> "$output_file"
+  echo "bench 100"
+  timeout 1m ../bench/bench -run=$i -connections=100 -duration=30 >> "$output_file"
 
   memory=$(docker stats --no-stream --no-trunc --format '{{.Name}} {{.MemUsage}}' | grep app-)
   echo "memory - $i - 2 - $memory" >> "$output_file"
