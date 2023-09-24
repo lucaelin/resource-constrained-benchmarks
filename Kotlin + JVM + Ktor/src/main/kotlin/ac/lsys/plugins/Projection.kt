@@ -1,4 +1,5 @@
 package ac.lsys.plugins
+
 class Projection {
     private val state = StringBuilder()
 
