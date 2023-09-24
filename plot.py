@@ -25,22 +25,22 @@ def process_file(filepath):
 
             # Depending on the operation, append the time to the relevant dataframe
             if 'compose up app' in operation:
-                compose_up_df = compose_up_df.append({'run': run, 'time': time}, ignore_index=True)
+                compose_up_df = pd.concat([compose_up_df, pd.DataFrame({'run': [run], 'time': [time]})], ignore_index=True)
             elif 'compose stop app' in operation:
-                compose_stop_df = compose_stop_df.append({'run': run, 'time': time}, ignore_index=True)
+                compose_stop_df = pd.concat([compose_stop_df, pd.DataFrame({'run': [run], 'time': [time]})], ignore_index=True)
             elif 'service up' in operation:
-                service_up_df = service_up_df.append({'run': run, 'time': time}, ignore_index=True)
+                service_up_df = pd.concat([service_up_df, pd.DataFrame({'run': [run], 'time': [time]})], ignore_index=True)
             elif 'warmup request' in operation:
-                warmup_df = warmup_df.append({'run': run, 'request': request, 'time': time}, ignore_index=True)
+                warmup_df = pd.concat([warmup_df, pd.DataFrame({'run': [run], 'request': [request], 'time': [time]})], ignore_index=True)
             elif 'memory' in operation:
                 match = re.search(r"app-1\s*(\d+\.\d+)MiB\s*/", value)
                 if match:
-                    memory_df = memory_df.append({'run': run, 'request': request, 'mem': float(match.group(1))}, ignore_index=True)
+                    memory_df = pd.concat([memory_df, pd.DataFrame({'run': [run], 'request': [request], 'mem': [float(match.group(1))]})], ignore_index=True)
             elif 'throughput' in operation:
                 match = re.search(r"(\d+\.\d+)\s*req/sec", value)
                 connections = request
                 if match:
-                    load_df = load_df.append({'run': run, 'connections': connections, 'freq': float(match.group(1))}, ignore_index=True)
+                    load_df = pd.concat([load_df, pd.DataFrame({'run': [run], 'connections': [connections], 'freq': [float(match.group(1))]})], ignore_index=True)
 
     # Calculate mean and standard deviation for each request
     warmup_summary_df = warmup_df.groupby('request')['time'].agg(['mean', 'std'])
