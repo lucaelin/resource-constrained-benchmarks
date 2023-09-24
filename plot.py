@@ -44,8 +44,9 @@ def process_file(filepath):
 
     # Calculate mean and standard deviation for each request
     warmup_summary_df = warmup_df.groupby('request')['time'].agg(['mean', 'std'])
+    load_summary_df = load_df.groupby('connections')['freq'].agg(['mean', 'std'])
 
-    return compose_up_df, compose_stop_df, service_up_df, warmup_summary_df, memory_df, load_df
+    return compose_up_df, compose_stop_df, service_up_df, warmup_summary_df, memory_df, load_summary_df
 
 def plot_data(dataframes):
     import matplotlib.pyplot as plt
@@ -90,10 +91,13 @@ def plot_data(dataframes):
         ax[3].set_ylim(0, 0.4)
 
         # Plot throughput
-        filtered_df = dfs['throughput'][dfs['throughput']['connections'] == 10]
-        rects3 = ax[4].bar(str(i), filtered_df['freq'].mean(), yerr=filtered_df['freq'].std(), color=color, label=filename)
-        autolabel(rects3, ax[4])
+        #filtered_df = dfs['throughput'][dfs['throughput']['connections'] == 10]
+        #rects3 = ax[4].bar(str(i), filtered_df['freq'].mean(), yerr=filtered_df['freq'].std(), color=color, label=filename)
+        #autolabel(rects3, ax[4])
 
+        ax[4].plot(dfs['throughput'].index, dfs['throughput']['mean'], color=color, label=filename)
+        ax[4].errorbar(dfs['throughput'].index, dfs['throughput']['mean'], yerr=dfs['throughput']['std'], color=color, alpha=0.4, fmt='none')
+        
         # Plot Memory
         rects4 = ax[5].bar(str(i), dfs['memory']['mem'].mean(), yerr=dfs['memory']['mem'].std(), color=color, label=filename)
         autolabel(rects4, ax[5])
@@ -125,7 +129,7 @@ def plot_data(dataframes):
     ax[3].legend(loc='best')
 
     ax[4].set_title('Throughput')
-    ax[4].set_xlabel('Type')
+    ax[4].set_xlabel('Connections')
     ax[4].set_ylabel('Req/s')
     #ax[4].legend(loc='lower right')
     ax[4].legend(loc='best')
