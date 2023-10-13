@@ -1,0 +1,29 @@
+version: '3.9'
+services:
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: apples
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpass
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  app:
+    build: "."
+    ports:
+      - 8080:8080
+    deploy:
+      resources:
+        limits:
+          cpus: ${APP_CPU_LIMIT:-1}
+          memory: ${APP_MEM_LIMIT:-100M}
+        reservations:
+          cpus: ${APP_CPU_LIMIT:-1}
+          memory: ${APP_MEM_LIMIT:-100M}
+    depends_on:
+      - db
+
+volumes:
+  postgres-data:
