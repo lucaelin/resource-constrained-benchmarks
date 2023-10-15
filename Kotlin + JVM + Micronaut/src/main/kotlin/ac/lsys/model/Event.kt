@@ -13,7 +13,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class Event(
     @field:Id
     @field:GeneratedValue(GeneratedValue.Type.AUTO)
-    var id: Int,
+    var id: Int = 0,
     var aggregateUUID: String,
-    var date: String
+    var data: String
 )

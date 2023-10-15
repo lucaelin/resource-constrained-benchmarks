@@ -1,10 +1,9 @@
 package ac.lsys.application
 
-import ac.lsys.plugins.Aggregate
-import ac.lsys.plugins.Command
-import ac.lsys.plugins.Event
-import ac.lsys.plugins.Projection
-import io.micronaut.context.BeanContext
+import ac.lsys.model.Aggregate
+import ac.lsys.model.Command
+import ac.lsys.model.Event
+import ac.lsys.model.Projection
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MutableHttpResponse
 import io.micronaut.http.annotation.Body
@@ -14,36 +13,33 @@ import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
 import io.micronaut.transaction.TransactionDefinition
 import io.micronaut.transaction.annotation.Transactional
-import java.util.UUID
 
 @Controller
-class Controller(private val beanContext: BeanContext) {
+open class Controller(
+    private val eventRepository: EventRepository
+) {
 
 
     @Post("/{uuid}/command")
     @Transactional(isolation = TransactionDefinition.Isolation.SERIALIZABLE)
-    fun post(@PathVariable uuid: String, @Body command: Command): HttpResponse<Event> {
+    open fun post(@PathVariable uuid: String, @Body command: Command): HttpResponse<Int> {
 
-        val eventService = beanContext.getBean(EventRepository::class.java)
-
-        val events: List<Event> = eventService.readByUuid(uuid)
+        val events: List<Event> = eventRepository.findByAggregateUUID(uuid)
 
         val aggregate = Aggregate(uuid)
         events.forEach(aggregate::apply)
 
-        val newEvent = Event(uuid, command.data)
+        val newEvent = Event(0, uuid, command.data)
         aggregate.apply(newEvent)
 
-        val eventId = eventService.create(newEvent)
+        val eventId = eventRepository.storeEvent(newEvent).id
 
         return HttpResponse.ok(eventId)
     }
 
     @Get("/{uuid}/query")
-    fun query(@PathVariable uuid: String): HttpResponse<String>? {
-        val eventService = beanContext.getBean(EventRepository::class.java)
-
-        val events = eventService.readByUuid(uuid)
+    open fun query(@PathVariable uuid: String): HttpResponse<String>? {
+        val events = eventRepository.findByAggregateUUID(uuid)
 
         val projection = Projection()
         events.forEach(projection::apply)
