@@ -19,7 +19,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the jar file from the builder stage
-COPY --from=builder /app/target/*.jar ./app.jar
+COPY --from=builder /app/target/apples-*.jar ./app.jar
 
 EXPOSE 8080
 

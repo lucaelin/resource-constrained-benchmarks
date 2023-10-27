@@ -9,7 +9,6 @@ import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
 @MappedEntity
-@Index(name = "idx_aggregate", columns = ["aggregateUUID"], unique = false)
 data class Event(
     @field:Id
     @field:GeneratedValue(GeneratedValue.Type.AUTO)

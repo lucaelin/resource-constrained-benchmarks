@@ -1,7 +1,8 @@
 datasources:
   default:
     dialect: POSTGRES
-    driverClassName: org.postgresql.Driver
+    db-type: postgres
+    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://db:5432/apples
     username: dbuser
     password: dbpass
@@ -13,7 +14,7 @@ datasources:
       max-lifetime: 1800000 # Maximum lifetime (in milliseconds) of a connection in the pool
       connection-timeout: 30000 # Maximum number of milliseconds a client will wait for a connection from the pool
 
-#flyway:
-#  datasources:
-#    default:
-#      enabled: true
+flyway:
+  datasources:
+    default:
+      enabled: true

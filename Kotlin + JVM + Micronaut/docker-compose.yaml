@@ -18,10 +18,10 @@ services:
       resources:
         limits:
           cpus: ${APP_CPU_LIMIT:-1}
-          memory: ${APP_MEM_LIMIT:-100M}
+          memory: ${APP_MEM_LIMIT:-200M}
         reservations:
           cpus: ${APP_CPU_LIMIT:-1}
-          memory: ${APP_MEM_LIMIT:-100M}
+          memory: ${APP_MEM_LIMIT:-200M}
     depends_on:
       - db
 
