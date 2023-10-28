@@ -9,7 +9,7 @@ RUN mvn dependency:go-offline
 
 # Copy source code and build the application
 COPY ./src ./src
-RUN mvn package -Pnative -DskipTests
+RUN mvn package -Dpackaging=native-image -DskipTests
 
 
 # For the runner stage use a distroless image
