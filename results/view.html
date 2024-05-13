@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stats Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-5">
+  <div id="app" class="container mx-auto">
+    <h1 class="text-2xl font-bold text-center">Stats Dashboard</h1>
+    <div id="controls" class="mt-5"></div>
+    <div id="results" class="mt-5"></div>
+  </div>
+  <script type="module">
+    import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.2/+esm';
+    import { BarWithErrorBarsController, BarWithErrorBar, LineWithErrorBarsController, PointWithErrorBar } from 'https://esm.run/chartjs-chart-error-bars@4.4.0';
+
+    Chart.register(...registerables, BarWithErrorBarsController, LineWithErrorBarsController, BarWithErrorBar, PointWithErrorBar);
+
+    const app = document.querySelector('#app');
+    const controls = app.querySelector('#controls');
+    const results = app.querySelector('#results');
+
+    const resultTypeCharts = {
+      'crashes': { type: BarWithErrorBarsController.id, unit: '#', header: 'Crashes' },
+      // 'build': { type: BarWithErrorBarsController.id, unit: 'seconds', header: 'Build Time' },
+      'startup': { type: BarWithErrorBarsController.id, unit: 'seconds', header: 'Startup Time' },
+      'firstRequest': { type: BarWithErrorBarsController.id, unit: 'seconds', header: 'First Request Time' },
+      'requests100': { type: LineWithErrorBarsController.id, unit: 'seconds', unitX: '#', header: 'First 100 Requests Time' },
+      'throughput': { type: LineWithErrorBarsController.id, unit: 'req / s', unitX: 'Connections', header: 'Throughput' },
+      //'memoryStartup': { type: BarWithErrorBarsController.id, unit: 'MiB', header: 'Memory Usage after Startup' },
+      'memoryLoad': { type: BarWithErrorBarsController.id, unit: 'MiB', header: 'Memory Usage after Load' }
+    };
+
+
+    await initializeControls();
+    const charts = initializeCharts();
+    updateCharts();
+
+    async function initializeControls() {
+      const data = await fetch('./results.json')
+        .then(response => response.json())
+
+      const selectFields = ['cores', 'memory', 'experiment'];
+      const resultTypes = Object.keys(resultTypeCharts);
+
+      // Create selects for cores, memory, and experiment
+      ['cores', 'memory'].forEach(field => {
+        const h2 = document.createElement('h2');
+        h2.innerText = field.charAt(0).toUpperCase() + field.slice(1);
+        h2.className = 'text-xl font-bold';
+        controls.appendChild(h2);
+
+        const select = document.createElement('select');
+        select.setAttribute('multiple', 'multiple');
+        select.id = field;
+        select.className = 'block w-full p-2 mt-1 mb-4 bg-white border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-32';
+
+        const uniqueValues = Array.from(new Set(data.map(item => item[field])));
+        uniqueValues.forEach(value => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.selected = [0.1, 200].includes(value) || typeof value === 'string';
+          option.innerText = value;
+          select.appendChild(option);
+        });
+
+        controls.appendChild(select);
+      });
+
+      {
+        // Create a select for technology types
+        const h2 = document.createElement('h2');
+        h2.innerText = 'Experiment';
+        h2.className = 'text-xl font-bold';
+        controls.appendChild(h2);
+
+        const select = document.createElement('select');
+        select.setAttribute('multiple', 'multiple');
+        select.id = 'experiment';
+        select.className = 'block w-full p-2 mt-1 mb-4 bg-white border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-64';
+
+        const uniqueValues = Array.from(new Set(data.map(item => item['experiment'])));
+        uniqueValues.forEach(value => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.selected = [0.5, 400].includes(value) || typeof value === 'string';
+          option.innerText = value;
+          select.appendChild(option);
+        });
+
+        controls.appendChild(select);
+      }
+      {
+        // Create a select for result types
+        let resultsSelect = document.createElement('select');
+        resultsSelect.setAttribute('multiple', 'multiple');
+        resultsSelect.id = 'resultType';
+        resultsSelect.className = 'block w-full p-2 mt-1 mb-4 bg-white border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-32';
+        resultsSelect.style.display = 'none';
+
+        resultTypes.forEach(type => {
+          let option = document.createElement('option');
+          option.value = type;
+          option.selected = true;
+          option.innerText = type;
+          resultsSelect.appendChild(option);
+        });
+
+        controls.appendChild(resultsSelect);
+      }
+
+      // Create a button for updating charts
+      let button = document.createElement('button');
+      button.innerText = 'Update Charts';
+      button.className = 'px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700';
+      button.onclick = () => updateCharts();
+      controls.appendChild(button);
+    }
+
+    function initializeCharts() {
+      return Object.fromEntries(Object.entries(resultTypeCharts).map(([name, type]) => {
+        return [name, createChart(name, type)]
+      }));
+    }
+    function createChart(name, options) {
+      const h2 = document.createElement('h2');
+      h2.innerText = options.header;
+      h2.className = 'text-xl font-bold';
+      results.appendChild(h2);
+
+      const canvas = document.createElement('canvas');
+      canvas.id = name;
+      canvas.className = 'mt-5';
+      results.appendChild(canvas);
+
+      function nColors(n, alpha = 0.3) {
+        const colors = [];
+
+        return new Array(n).fill(0).map((_, index) => {
+          const hue = index * 360 / n;
+          return `hsla(${hue}, 100%, 50%, ${alpha})`;
+        });
+      }
+
+      const chart = new Chart(canvas, {
+        type: options.type,
+        data: {
+          labels: [],
+          datasets: [{
+            label: name,
+            data: [],
+          }]
+        },
+        options: {
+          indexAxis: options.type === BarWithErrorBarsController.id ? 'y' : 'x',
+          plugins: {
+            legend: {
+              display: options.type !== BarWithErrorBarsController.id
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: options.type === BarWithErrorBarsController.id ? options.unit : options.unitX
+              }
+            },
+            y: {
+              type: options.type === BarWithErrorBarsController.id ? 'category' : 'linear',
+              beginAtZero: true,
+              title: {
+                display: options.type === LineWithErrorBarsController.id,
+                text: options.unit
+              }
+            }
+          }
+        }
+      });
+
+      if (options.type === BarWithErrorBarsController.id) {
+        /**
+          * Update the chart with new data
+          * @param {{name: string, result: {mean: number, deviation: number}}[]} data 
+          */
+        return (data) => {
+          console.log('updating chart', name, data);
+          chart.data.labels = [];
+          chart.data.datasets[0].data = [];
+
+          data.forEach(({ name, result }, index) => {
+            chart.data.labels.push(name);
+            chart.data.datasets[0].data.push({
+              x: result.mean,
+              xMin: result.mean - result.deviation,
+              xMax: result.mean + result.deviation,
+            });
+          });
+          chart.data.datasets[0].backgroundColor = nColors(data.length, 0.5);
+          chart.data.datasets[0].errorBarColor = 'rgba(0, 0, 0, 0.2)';
+          chart.data.datasets[0].errorBarWhiskerColor = 'rgba(0, 0, 0, 0.2)';
+          chart.data.datasets[0].errorBarWhiskerSize = 4;
+
+          chart.update();
+        };
+      }
+
+      if (options.type === LineWithErrorBarsController.id) {
+        /**
+          * Update the chart with new data
+          * @param {{name: string, result: {mean: number, deviation: number}[]}[]} data 
+          */
+        return (data) => {
+          console.log('updating chart', name, data);
+
+          chart.data.labels = [];
+          chart.data.datasets = [];
+
+          chart.data.labels = new Array(100).fill(0).map((_, index) => index + 1);
+          data.forEach(({ name, result }, index) => {
+            chart.data.datasets.push({
+              label: name,
+              data: result.map((value, index) => value ? {
+                x: index + 1,
+                y: value.mean,
+                yMin: value.mean - value.deviation,
+                yMax: value.mean + value.deviation,
+              } : {
+                x: index + 1,
+                y: null,
+                yMin: null,
+                yMax: null,
+              }),
+              borderColor: nColors(data.length)[index],
+              errorBarColor: 'rgba(0, 0, 0, 0.2)',
+              errorBarWhiskerColor: 'rgba(0, 0, 0, 0.2)',
+              errorBarWhiskerSize: 4,
+              spanGaps: true,
+            });
+          });
+          chart.update();
+        };
+      }
+    }
+
+    async function filterSelectionData() {
+      const data = await fetch('./results.json')
+        .then(response => response.json())
+
+      const cores = Array.from(document.getElementById('cores').selectedOptions).map(option => parseFloat(option.value));
+      const memory = Array.from(document.getElementById('memory').selectedOptions).map(option => parseFloat(option.value));
+      const experiment = Array.from(document.getElementById('experiment').selectedOptions).map(option => option.value);
+      const resultType = Array.from(document.getElementById('resultType').selectedOptions).map(option => option.value);
+      console.log('Filtering data', cores, memory, experiment, resultType);
+
+      const filtered = data.filter(item => {
+        return cores.includes(item.cores) && memory.includes(item.memory) && experiment.includes(item.experiment);
+      }).map(item => {
+        return {
+          ...item,
+          results: Object.fromEntries(Object.entries(item.results).filter(([key, value]) => resultType.includes(key)))
+        };
+      })
+      return filtered;
+    }
+
+    async function updateCharts() {
+      const data = await filterSelectionData();
+      console.log('Updating charts', data);
+
+      const selectedResults = new Set();
+      for (const entry of data) {
+        for (const key of Object.keys(entry.results)) {
+          selectedResults.add(key);
+        }
+      }
+
+      Object.keys(resultTypeCharts).forEach(resultType => {
+        if (!selectedResults.has(resultType)) return charts[resultType]([]);
+
+        const resultData = data.map(item => {
+          return {
+            name: `${item.experiment}, ${item.cores} cores - ${item.memory} MB`,
+            resultType,
+            result: item.results[resultType]
+          };
+        });
+
+        charts[resultType](resultData);
+      });
+    }
+  </script>
+</body>
+
+</html>

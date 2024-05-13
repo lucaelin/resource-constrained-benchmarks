@@ -1,20 +1,27 @@
 #!/bin/bash
 
 TECH_STACK_VALUES=(
-#    'C# + .NET Core + ASP.NET'
-#    'Go + Native + Gin'
-#    'Java + JVM + Quarkus'
-#    'Java + JVM + Spring Boot 3'
-#    'Java + Native + Spring Boot 3'
-#    'Kotlin + JVM + Ktor'
-#    'Python + CPython + Flask'
-    'TypeScript + Node.js + Express'
+    'C# + .NET Core + ASP.NET'
+    'Go + Native + Gin'
+    'Java + JVM + Quarkus'
+    'Java + JVM + Spring Boot 3'
+    'Java + Native + Spring Boot 3'
+    'Kotlin + JVM + Micronaut'
+    'Kotlin + Native + Micronaut'
+    'Kotlin + JVM + Ktor'
+    'Python + CPython + Flask'
+    'JavaScript + Node.js + Express'
+    'JavaScript + Node.js + Fastify'
+    'TypeScript + Deno + Express'
+    'TypeScript + Bun + Express'
 )
 
 # Set the values for the APP_CPU_LIMIT and APP_MEM_LIMIT
 APP_CPU_LIMIT_VALUES=(
-#    "0.1" 
-#    "0.5"
+#    "0.05" 
+    "0.1" 
+    "0.2" 
+    "0.5"
     "1.0"
 #    "2.0"
 )
@@ -23,6 +30,7 @@ APP_MEM_LIMIT_VALUES=(
 #    "050M" 
 #    "100M" 
     "200M"
+    "400M"
 )
 
 
