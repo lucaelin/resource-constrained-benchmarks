@@ -1,4 +1,4 @@
-FROM denoland/deno:alpine-1.37.2
+FROM denoland/deno:alpine-1.43.3
 WORKDIR /app
 ENV NODE_ENV=production
 

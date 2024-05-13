@@ -1,4 +1,4 @@
-FROM node:18-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
@@ -8,7 +8,7 @@ COPY ./src ./src
 RUN npm run build
 
 # ---- Release ----
-FROM node:18-alpine
+FROM node:22-alpine
 WORKDIR /app
 COPY --from=build /app .
 EXPOSE 3000
