@@ -46,13 +46,13 @@ do
   echo "memory - $i - 1 - $memory" >> "$output_file"
 
   echo "bench 1"
-  timeout 1m ../bench/bench -run=$i -connections=1 -duration=30 >> "$output_file"
+  timeout 1m ../bench/bench -run=$i -connections=1 -duration=15 >> "$output_file"
   echo "bench 10"
-  timeout 1m ../bench/bench -run=$i -connections=10 -duration=30 >> "$output_file"
+  timeout 1m ../bench/bench -run=$i -connections=10 -duration=15 >> "$output_file"
   echo "bench 50"
-  timeout 1m ../bench/bench -run=$i -connections=50 -duration=30 >> "$output_file"
+  timeout 1m ../bench/bench -run=$i -connections=50 -duration=15 >> "$output_file"
   echo "bench 100"
-  timeout 1m ../bench/bench -run=$i -connections=100 -duration=30 >> "$output_file"
+  timeout 1m ../bench/bench -run=$i -connections=100 -duration=15 >> "$output_file"
 
   memory=$(docker stats --no-stream --no-trunc --format '{{.Name}} {{.MemUsage}}' | grep app-)
   echo "memory - $i - 2 - $memory" >> "$output_file"

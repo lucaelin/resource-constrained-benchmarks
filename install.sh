@@ -23,4 +23,4 @@ docker ps && exit
 echo install docker? 
 read -s -n 1 
 curl https://get.docker.com | bash 
-adduser $USER docker
+sudo adduser $USER docker
