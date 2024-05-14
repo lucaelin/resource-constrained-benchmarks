@@ -41,10 +41,12 @@ do
     do
         for MEM_LIMIT in "${APP_MEM_LIMIT_VALUES[@]}"; 
         do
+            echo "Running $TECH_STACK with $CPU_LIMIT Core and $MEM_LIMIT Memory";
             APP_CPU_LIMIT=$CPU_LIMIT APP_MEM_LIMIT=$MEM_LIMIT timeout 30m ./bench.sh "$TECH_STACK";
             python3 ./plot.py "${CPU_LIMIT} Core - ${MEM_LIMIT}B";
             python3 ./plot.py "$TECH_STACK";
             ./results/aggregate.ts
+            echo "Finished $TECH_STACK with $CPU_LIMIT Core and $MEM_LIMIT Memory";
         done
     done
     python3 ./plot.py "$1";
