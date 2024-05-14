@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-sudo apt install python3-pip uuid bc curl
+sudo apt update
+sudo apt install -y python3-pip uuid bc curl unzip
+
+curl -fsSL https://deno.land/install.sh | sh
 
 curl -fsSLo- https://s.id/golang-linux | bash
 

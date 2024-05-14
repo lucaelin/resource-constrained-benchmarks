@@ -44,9 +44,11 @@ do
             APP_CPU_LIMIT=$CPU_LIMIT APP_MEM_LIMIT=$MEM_LIMIT timeout 30m ./bench.sh "$TECH_STACK";
             python3 ./plot.py "${CPU_LIMIT} Core - ${MEM_LIMIT}B";
             python3 ./plot.py "$TECH_STACK";
+            ./results/aggregate.ts
         done
     done
     python3 ./plot.py "$1";
+    ./results/aggregate.ts
 done
 
 spd-say "aim dann";

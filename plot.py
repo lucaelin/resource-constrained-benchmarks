@@ -196,7 +196,7 @@ def main():
 
     # Plot data
     plot = plot_data({**dataframes_a, **dataframes_b})
-    plot.savefig(input+'.png')
+    plot.savefig('results/'+input+'.png')
 
 if __name__ == '__main__':
     main()

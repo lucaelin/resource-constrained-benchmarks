@@ -7,8 +7,8 @@ export SERVICE_NAME="${1//\//:-$SERVICE_NAME}"
 cd "$SERVICE_NAME"
 
 # Create file to store timings
-output_file="../${APP_CPU_LIMIT} Core - ${APP_MEM_LIMIT}B/${SERVICE_NAME}.txt"
-mkdir "../${APP_CPU_LIMIT} Core - ${APP_MEM_LIMIT}B"
+output_file="../results/${APP_CPU_LIMIT} Core - ${APP_MEM_LIMIT}B/${SERVICE_NAME}.txt"
+mkdir "../results/${APP_CPU_LIMIT} Core - ${APP_MEM_LIMIT}B"
 rm "$output_file"
 touch "$output_file"
 docker compose down -v

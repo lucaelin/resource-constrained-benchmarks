@@ -25,14 +25,60 @@
     const results = app.querySelector('#results');
 
     const resultTypeCharts = {
-      'crashes': { type: BarWithErrorBarsController.id, unit: '#', header: 'Crashes' },
-      // 'build': { type: BarWithErrorBarsController.id, unit: 'seconds', header: 'Build Time' },
-      'startup': { type: BarWithErrorBarsController.id, unit: 'seconds', header: 'Startup Time' },
-      'firstRequest': { type: BarWithErrorBarsController.id, unit: 'seconds', header: 'First Request Time' },
-      'requests100': { type: LineWithErrorBarsController.id, unit: 'seconds', unitX: '#', header: 'First 100 Requests Time' },
-      'throughput': { type: LineWithErrorBarsController.id, unit: 'req / s', unitX: 'Connections', header: 'Throughput' },
-      //'memoryStartup': { type: BarWithErrorBarsController.id, unit: 'MiB', header: 'Memory Usage after Startup' },
-      'memoryLoad': { type: BarWithErrorBarsController.id, unit: 'MiB', header: 'Memory Usage after Load' }
+      'crashes': {
+        type: BarWithErrorBarsController.id,
+        unit: '#',
+        header: 'Crashes',
+        description: 'Each implementation is tested 10 times. This chart shows the number of crashes that occurred during the tests, meaning that the container was not running after load-testing was performed. If this number is not zero, it means that results for this implementation are not reliable.'
+      },
+      /*
+      'build': { 
+        type: BarWithErrorBarsController.id, 
+        unit: 'seconds', 
+        header: 'Build Time',
+        description: 'The time it takes to build the container image. This is not a good measurement, as it also contains network latency and other factors. It is included here for completeness.'
+      },
+      */
+      'startup': {
+        type: BarWithErrorBarsController.id,
+        unit: 'seconds',
+        header: 'Startup Time',
+        description: 'The time it takes until the container is ready to accept requests. This is measured from the moment the container is started until the start of the first request that ended successfully.'
+      },
+      'firstRequest': {
+        type: BarWithErrorBarsController.id,
+        unit: 'seconds',
+        header: 'First Request Time',
+        description: 'The time it takes to process the first request after the container started accepting connections. This is measured from the moment the first request is sent until the response is received.'
+      },
+      'requests100': {
+        type: LineWithErrorBarsController.id,
+        unit: 'seconds',
+        unitX: '#',
+        header: 'First 100 Requests Time',
+        description: 'The time it takes to process each of the first 100 requests. This is measured from the moment the request is sent until the response is received.'
+      },
+      'throughput': {
+        type: LineWithErrorBarsController.id,
+        unit: 'req / s',
+        unitX: 'Connections',
+        header: 'Throughput',
+        description: 'The number of requests that the container can successfully process per second. The test is performed with a fixed number of connections for 30 seconds and each connection sends a new request as soon as the previous one is finished.'
+      },
+      /*
+      'memoryStartup': { 
+        type: BarWithErrorBarsController.id, 
+        unit: 'MiB', 
+        header: 'Memory Usage after Startup',
+        description: 'The memory usage of the container after warmup. This is measured in MiB and is the memory usage of the container as repored by docker.'
+      },
+      */
+      'memoryLoad': {
+        type: BarWithErrorBarsController.id,
+        unit: 'MiB',
+        header: 'Memory Usage after Load',
+        description: 'The memory usage of the container after load-testing. This is measured in MiB and is the memory usage of the container as repored by docker.'
+      }
     };
 
 
@@ -131,6 +177,11 @@
       h2.innerText = options.header;
       h2.className = 'text-xl font-bold';
       results.appendChild(h2);
+
+      const p = document.createElement('p');
+      p.innerText = options.description;
+      p.className = 'text-gray-600';
+      results.appendChild(p);
 
       const canvas = document.createElement('canvas');
       canvas.id = name;
