@@ -1,10 +1,14 @@
-FROM python:3.13.0b1-alpine
+FROM python:3.12.3-alpine
 
 WORKDIR /app
+
+RUN apk add --no-cache --virtual build-dependencies libpq-dev build-base
 
 COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
+
+RUN apk del --no-cache build-dependencies
 
 COPY . .
 
