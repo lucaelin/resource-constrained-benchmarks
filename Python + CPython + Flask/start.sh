@@ -4,4 +4,4 @@
 flask db_init
 
 # Start the Gunicorn server
-gunicorn app:app -b 0.0.0.0:8080 --workers=4
+gunicorn app:app -b 0.0.0.0:8080 --workers=1
