@@ -244,6 +244,7 @@
           chart.data.datasets[0].data = [];
 
           data.forEach(({ name, result }, index) => {
+            if (!result) return;
             chart.data.labels.push(name);
             chart.data.datasets[0].data.push({
               x: result.mean,
