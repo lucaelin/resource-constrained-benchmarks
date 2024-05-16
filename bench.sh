@@ -13,6 +13,9 @@ rm "$output_file"
 touch "$output_file"
 docker compose down -v
 
+echo "time - 0 - 0 - $(date +"%Y-%m-%dT%H:%M:%S%z")" > "$output_file"
+echo "instance - 0 - 0 - $(ec2metadata --instance-type)" > "$output_file"
+
 sleep 3
 
 start=$(date +%s.%N)
@@ -32,6 +35,7 @@ sleep 3
 
 for i in {1..10}
 do
+  echo "date - $i - 0 - $(date +"%Y-%m-%dT%H:%M:%S%z")" > "$output_file"
   # Measure and record the time to start the service container
   start=$(date +%s.%N)
   docker compose up app -d

@@ -86,6 +86,29 @@
     const charts = initializeCharts();
     updateCharts();
 
+    function generateMultiSelect(field, options, selected = true) {
+      const h2 = document.createElement('h2');
+      h2.innerText = field.charAt(0).toUpperCase() + field.slice(1);
+      h2.className = 'text-xl font-bold';
+      controls.appendChild(h2);
+
+      const select = document.createElement('select');
+      select.setAttribute('multiple', 'multiple');
+      select.id = field;
+      select.className = 'block w-full p-2 mt-1 mb-4 bg-white border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50';
+      if (options.length > 5) select.className += ' h-64';
+
+      options.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.selected = typeof selected === 'boolean' ? selected : selected.includes(value);
+        option.innerText = value;
+        select.appendChild(option);
+      });
+
+      controls.appendChild(select);
+    }
+
     async function initializeControls() {
       const data = await fetch('./results.json')
         .then(response => response.json())
@@ -94,52 +117,11 @@
       const resultTypes = Object.keys(resultTypeCharts);
 
       // Create selects for cores, memory, and experiment
-      ['cores', 'memory'].forEach(field => {
-        const h2 = document.createElement('h2');
-        h2.innerText = field.charAt(0).toUpperCase() + field.slice(1);
-        h2.className = 'text-xl font-bold';
-        controls.appendChild(h2);
+      generateMultiSelect('instance', Array.from(new Set(data.map(item => item['instance']))), ['c7a.xlarge']);
+      generateMultiSelect('cores', Array.from(new Set(data.map(item => item['cores']))), [0.1]);
+      generateMultiSelect('memory', Array.from(new Set(data.map(item => item['memory']))), [400]);
+      generateMultiSelect('experiment', Array.from(new Set(data.map(item => item['experiment']))), true);
 
-        const select = document.createElement('select');
-        select.setAttribute('multiple', 'multiple');
-        select.id = field;
-        select.className = 'block w-full p-2 mt-1 mb-4 bg-white border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-32';
-
-        const uniqueValues = Array.from(new Set(data.map(item => item[field])));
-        uniqueValues.forEach(value => {
-          const option = document.createElement('option');
-          option.value = value;
-          option.selected = [0.1, 200].includes(value) || typeof value === 'string';
-          option.innerText = value;
-          select.appendChild(option);
-        });
-
-        controls.appendChild(select);
-      });
-
-      {
-        // Create a select for technology types
-        const h2 = document.createElement('h2');
-        h2.innerText = 'Experiment';
-        h2.className = 'text-xl font-bold';
-        controls.appendChild(h2);
-
-        const select = document.createElement('select');
-        select.setAttribute('multiple', 'multiple');
-        select.id = 'experiment';
-        select.className = 'block w-full p-2 mt-1 mb-4 bg-white border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-64';
-
-        const uniqueValues = Array.from(new Set(data.map(item => item['experiment'])));
-        uniqueValues.forEach(value => {
-          const option = document.createElement('option');
-          option.value = value;
-          option.selected = [0.5, 400].includes(value) || typeof value === 'string';
-          option.innerText = value;
-          select.appendChild(option);
-        });
-
-        controls.appendChild(select);
-      }
       {
         // Create a select for result types
         let resultsSelect = document.createElement('select');
@@ -303,6 +285,7 @@
       const data = await fetch('./results.json')
         .then(response => response.json())
 
+      const instances = Array.from(document.getElementById('instance').selectedOptions).map(option => option.value);
       const cores = Array.from(document.getElementById('cores').selectedOptions).map(option => parseFloat(option.value));
       const memory = Array.from(document.getElementById('memory').selectedOptions).map(option => parseFloat(option.value));
       const experiment = Array.from(document.getElementById('experiment').selectedOptions).map(option => option.value);
@@ -310,7 +293,7 @@
       console.log('Filtering data', cores, memory, experiment, resultType);
 
       const filtered = data.filter(item => {
-        return cores.includes(item.cores) && memory.includes(item.memory) && experiment.includes(item.experiment);
+        return cores.includes(item.cores) && memory.includes(item.memory) && experiment.includes(item.experiment) && instances.includes(item.instance);
       }).map(item => {
         return {
           ...item,
@@ -335,8 +318,12 @@
         if (!selectedResults.has(resultType)) return charts[resultType]([]);
 
         const resultData = data.map(item => {
+          let name = item.experiment;
+          if (new Set(data.map(item => item['instance'])).size > 1) name += ` - ${item.instance}`;
+          if (new Set(data.map(item => item['cores'])).size > 1) name += ` - ${item.cores} cores`;
+          if (new Set(data.map(item => item['memory'])).size > 1) name += ` - ${item.memory} MB`;
           return {
-            name: `${item.experiment}, ${item.cores} cores - ${item.memory} MB`,
+            name,
             resultType,
             result: item.results[resultType]
           };

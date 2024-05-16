@@ -33,6 +33,8 @@ for await (const entry of walk(new URL("../", import.meta.url).pathname)) {
 }
 
 const stats: {
+  instance: string;
+  time: string;
   cores: number;
   memory: number;
   experiment: string;
@@ -62,6 +64,8 @@ function meanAndDev(
 }
 
 for (const file of files) {
+  const instance = file.results.filter((r) => r.metric === "instance");
+  const time = file.results.filter((r) => r.metric === "time");
   const build = file.results.filter((r) => r.metric === "compose build");
   const startup = file.results.filter((r) => r.metric === "service up");
   const requests100 = file.results.filter((r) => r.metric === "warmup request");
@@ -75,6 +79,8 @@ for (const file of files) {
   );
 
   stats.push({
+    instance: instance[0].value,
+    time: time[0].value,
     cores: file.cores,
     memory: file.memory,
     experiment: file.experiment,
