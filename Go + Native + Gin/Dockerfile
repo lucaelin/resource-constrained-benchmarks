@@ -1,5 +1,5 @@
 # Use the official Golang image to create a build artifact.
-FROM golang:1.20 AS builder
+FROM golang:1.22.3-alpine3.19 AS builder
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 ### Start a new stage from scratch ###
-FROM alpine:latest  
+FROM alpine:3.19  
 
 RUN apk --no-cache add ca-certificates
 

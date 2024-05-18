@@ -1,7 +1,9 @@
 # Use official GraalVM image for the builder stage
-FROM vegardit/graalvm-maven:22.3.2-java17 as builder
+FROM ghcr.io/graalvm/jdk-community:21-ol9 as builder
 
 WORKDIR /app
+
+RUN microdnf install maven --setopt=install_weak_deps=0
 
 # Copy pom.xml and get all dependencies
 COPY pom.xml ./

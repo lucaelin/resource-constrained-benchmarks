@@ -1,5 +1,5 @@
 # The `sdk` image includes .NET SDK which we need to restore and build our application
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 
 # Set the working directory in the image
 WORKDIR /app
@@ -15,7 +15,7 @@ RUN dotnet publish -c Release -o out
 RUN ls /app/out
 
 # Use the `aspnet` image which only has the runtime installed
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
 # Set the working directory in the image
 WORKDIR /app

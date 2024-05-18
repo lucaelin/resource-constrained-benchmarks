@@ -1,5 +1,5 @@
 # Use official Maven image for the builder stage
-FROM maven:3.8.2-openjdk-17-slim as builder
+FROM maven:3.9-amazoncorretto-21-debian as builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN mvn package -DskipTests
 
 
 # For the runner stage use openjdk image
-FROM openjdk:17-jdk-slim
+FROM amazoncorretto:21-alpine3.19-jdk
 
 WORKDIR /app
 

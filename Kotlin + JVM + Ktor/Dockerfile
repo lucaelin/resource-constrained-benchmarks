@@ -1,5 +1,5 @@
 # Use the official Kotlin image as the base image
-FROM openjdk:19-jdk-slim as builder
+FROM amazoncorretto:21-alpine3.19-jdk as builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY src src
 RUN ./gradlew clean build
 
 # Multi-stage build: Use a smaller base image for the final image
-FROM openjdk:11-jre-slim
+FROM amazoncorretto:21-alpine3.19-jdk
 
 WORKDIR /app
 
