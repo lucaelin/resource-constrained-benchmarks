@@ -1,5 +1,5 @@
 # Use official GraalVM image for the builder stage
-FROM ghcr.io/graalvm/jdk-community:21-ol9 as builder
+FROM ghcr.io/graalvm/native-image-community:21-ol9 as builder
 
 WORKDIR /app
 

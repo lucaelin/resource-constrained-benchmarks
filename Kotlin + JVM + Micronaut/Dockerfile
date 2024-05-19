@@ -1,5 +1,5 @@
 # Use official Maven image for the builder stage
-FROM maven:3.9-amazoncorretto-21-debian as builder
+FROM maven:3.9-amazoncorretto-19-debian as builder
 
 WORKDIR /app
 
