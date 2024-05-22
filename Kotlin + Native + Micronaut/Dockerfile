@@ -3,15 +3,15 @@ FROM ghcr.io/graalvm/native-image-community:21-ol9 as builder
 
 WORKDIR /app
 
-RUN microdnf install maven --setopt=install_weak_deps=0
+RUN microdnf install maven
 
 # Copy pom.xml and get all dependencies
 COPY pom.xml ./
-RUN mvn dependency:go-offline
+RUN --mount=type=cache,target=/app/.m2 mvn -Dmaven.repo.local=/app/.m2 dependency:go-offline
 
 # Copy source code and build the application
 COPY ./src ./src
-RUN mvn package -Dpackaging=native-image -DskipTests
+RUN --mount=type=cache,target=/app/.m2 mvn -Dmaven.repo.local=/app/.m2 package -Dpackaging=native-image -DskipTests
 
 
 # For the runner stage use a distroless image

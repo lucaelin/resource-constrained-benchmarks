@@ -79,8 +79,8 @@ for (const file of files) {
   );
 
   stats.push({
-    instance: instance[0].value,
-    time: time[0].value,
+    instance: instance?.[0]?.value ?? "unknown",
+    time: time?.[0]?.value ?? new Date().toISOString(),
     cores: file.cores,
     memory: file.memory,
     experiment: file.experiment,

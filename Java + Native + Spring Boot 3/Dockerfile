@@ -7,7 +7,7 @@ RUN microdnf install maven --setopt=install_weak_deps=0
 
 # Copy pom.xml and get all dependencies
 COPY pom.xml ./
-RUN mvn dependency:go-offline
+RUN --mount=type=cache,target=/app/.m2 mvn dependency:go-offline -Dmaven.repo.local=/app/.m2
 
 # Copy source code and build the application
 COPY ./src ./src
